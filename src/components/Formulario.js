@@ -2,16 +2,22 @@ import React from "react";
 import { BrowserRouter as Router, Route } from "react-router-dom";
 import axios from 'axios';
 
+import processaDadosNoServidor from '../service/FormServices'
+
 import Select from '../UIcomponents/select'
 import Checkbox from '../UIcomponents/checkbox'
 import Radio from '../UIcomponents/radio'
 import InputText from '../UIcomponents/inputText'
 import Button from '../UIcomponents/button'
+import { FormUpdate } from "../utils/util";
 
 class Formulario extends React.Component {
 
   constructor(props) {
+    
     super(props)
+
+    this.formUpdate = new FormUpdate(this)
 
     this.state = {
 
@@ -58,9 +64,6 @@ class Formulario extends React.Component {
      ]
    }
 
-    
-    //console.log(this.state);
-
   }
 
 
@@ -94,7 +97,6 @@ class Formulario extends React.Component {
   }
 
   resetaFormulario() {
-
     
     console.log("resetaFormulario")
 
@@ -132,106 +134,29 @@ class Formulario extends React.Component {
     this.setState({alertas})
   }
 
-  atualizaDomComponentes() {
-    this.state.formulario.map((valor)=>{
-      
-      if (valor.tipo === "radio") {
-        let radio = document.getElementById(valor.index);
-        radio.checked = true
-      } else if (valor.tipo === "checkbox") {
-          valor.valores.map((valor) => {
-          let check = document.getElementById(valor.id);
-          check.checked = true
-        });
-      } else if (valor.tipo === "select") {
-        document.getElementById(valor.id).selectedIndex = valor.index;
-      }
-    });
-  }
-
   componentDidMount() {
-      this.atualizaDomComponentes()
+      this.formUpdate.atualizaDomComponentes();
   }
 
   atualizaValorCampoInput = (campo, valor) => {
-
-    let novoCampo = campo;
-
-    novoCampo["valor"] = valor;
-    this.setState( { novoCampo })
-
-    //console.log({ ...this.state, campo })
-
+      this.formUpdate.atualizaValorCampoInput(campo,valor);
   }
 
   atualizaValorCheckbox = (campo, filho) => {
-    
-    let novoCampo = campo;
-    let selecionados = []
-    campo.options.map((valor)=>{
-          let check = document.getElementById(valor.id);
-          if (check.checked == true) {
-             selecionados.push({id:valor.id, valor:valor.valor})
-          }
-    });
-    novoCampo["valores"] = selecionados;
-    this.setState({novoCampo})
-    console.log(novoCampo)
+      this.formUpdate.atualizaValorCheckbox(campo,filho);
   }
 
   atualizaValorCampoRadio = (campo,filho) => {
-    let novoCampo = campo;
-
-    let index = document.getElementById(filho.id).value;
-    let valor = filho.valor;
-
-    novoCampo["index"] = index;
-    novoCampo["valor"] = valor;
-
-    this.setState({novoCampo})
-    console.log(novoCampo)
+      this.formUpdate.atualizaValorCampoRadio(campo,filho);
   }
 
   atualizaValorCampoSelect = (campo) => {
-
-    let novoCampo = campo;
-
-    let x = document.getElementById(novoCampo.id).selectedIndex;
-    let y = document.getElementById(novoCampo.id).options;
-    //alert("Index: " + y[x].index + " is " + y[x].value);
-
-    novoCampo["index"] = y[x].index;
-    novoCampo["valor"] = y[x].value;
-    novoCampo["idDetail"] = y[x].id;
-
-    this.setState({novoCampo})
-    console.log(JSON.stringify(novoCampo))
-
+      this.formUpdate.atualizaValorCampoSelect(campo)
   }
 
   processaDadosNoServidor = (nome) => {
-    
-
-    this.state.formulario.map((valor)=>{
-
-       if (valor.tipo === "evento") {
-           valor["nome"] = nome;
-       }
-
-    });
-    
-    const formulario = {
-      formulario: this.state.formulario
-    }
-
-    axios.post(`http://127.0.0.1:5000/main/enviar_formulario`, formulario)
-        .then(res => {
-          const formulario = res.data;
-          console.log(formulario)
-          this.setState(formulario);        
-    })
+      processaDadosNoServidor(this,nome);
   }
-
 
   renderizaComponente() {
     
