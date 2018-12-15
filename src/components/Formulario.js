@@ -1,0 +1,349 @@
+import React from "react";
+import { BrowserRouter as Router, Route } from "react-router-dom";
+import axios from 'axios';
+
+import Select from '../UIcomponents/select'
+import Checkbox from '../UIcomponents/checkbox'
+import Radio from '../UIcomponents/radio'
+import InputText from '../UIcomponents/inputText'
+import Button from '../UIcomponents/button'
+
+class Formulario extends React.Component {
+
+  constructor(props) {
+    super(props)
+
+    this.state = {
+
+      alertas:[],
+      formulario : [
+        {tipo:"text", type:"str", id:1, valor:"", placeholder:"Aqui voce vai digitar seu nome", label: "Digite seu nome",
+        func: eval("(valor)=> {if (valor.trim().length == 0) {return false;}return true;}"),
+        msgErro:"Campo nome nao pode ser vazio"},
+ 
+        {tipo:"text", type:"str", id:2, valor:"kalho doido", placeholder:"", label: "Digite seu email",
+        func: (valor)=> {
+ 
+           if (valor.trim().length == 0) {
+             return false;
+           }
+ 
+         return true;
+ 
+        }, msgErro:"Campo email nao pode ser vazio"},
+        {tipo:"password",type:"str", id:3, valor:"", placeholder:"", label: "Digite sua senha"},
+        {tipo:"select",id:4, label:"Selecione alguma coisa", index:"2", idDetail:"opt3", valor:"03", 
+                       options:[
+                               {valor:"01", id:"opt1"},
+                               {valor:"02", id:"opt2"}, 
+                               {valor:"03", id:"opt3"}]
+        },
+        {tipo:"text",type:"str", id:5, valor:"", placeholder:"", label: "Digite seu telefone"},
+        {tipo:"text",type:"str", id:6, valor:"", placeholder:"", label: "Digite seu sobre nome"},
+        
+        {tipo:"radio", id:7, valor:"", index:"rd3", idDetail:"rd3", label: "Selecione RADIO", 
+                       options:[
+                               {valor:"abacaxi", id:"rd1"},
+                               {valor:"abobora", id:"rd2"}, 
+                               {valor:"cebola", id:"rd3"}]
+       },
+       {tipo:"checkbox", id:8, valores:[{valor:"morango", id:"ch1"},{valor:"abacaxi", id:"ch3"}],label: "Selecione Checkbox", 
+                       options:[
+                               {valor:"morango", id:"ch1"},
+                               {valor:"banana", id:"ch2"}, 
+                               {valor:"abacaxi", id:"ch3"}]
+       },
+       {tipo:"button", id:9, evento:"eventoSoma", label: "Digite sua senha"},
+       
+     ]
+   }
+
+    
+    //console.log(this.state);
+
+  }
+
+
+
+  validaAntesDeSalvar() {
+
+    const { formulario } = this.state;
+
+    let alertas = [];
+
+    formulario.map((valor)=>{
+
+      if (valor.func != undefined) {
+        console.log(valor.func)
+        let validou = valor.func(valor.valor);
+
+        if (validou == false) {
+           document.getElementById(valor.id).style = "border-color: red";
+           console.log(valor.msgErro);
+           alertas.push(valor.msgErro)
+        } else {
+           document.getElementById(valor.id).style = "border-color: none";
+        }
+        
+      }
+
+    });
+
+    this.setState({alertas})
+
+  }
+
+  resetaFormulario() {
+
+    
+    console.log("resetaFormulario")
+
+    this.state.formulario.map((valor)=>{
+      
+      if (valor.tipo === "text" || valor.tipo === "password") {
+          let valorNovo = valor;
+          valorNovo.valor = ""
+          this.setState({valorNovo})
+          document.getElementById(valor.id).style = "border-color: none";
+      } else if (valor.tipo === "radio") {
+          let novoValor = valor;  
+          novoValor.index = null;
+          novoValor.valor = ""
+          this.setState({novoValor})
+
+          valor.options.map((valor) => {
+              document.getElementById(valor.id).checked = false
+          })
+          //console.log(novoValor)
+      } else if (valor.tipo === "checkbox") {
+          let novoValor = valor;  
+          novoValor.valores = [];
+          this.setState({novoValor})
+
+          valor.options.map((valor) => {
+              document.getElementById(valor.id).checked = false
+          })
+      } else if (valor.tipo === "select") {
+          document.getElementById(valor.id).selectedIndex = 0;
+      }
+    });
+
+    let alertas = []
+    this.setState({alertas})
+  }
+
+  atualizaDomComponentes() {
+    this.state.formulario.map((valor)=>{
+      
+      if (valor.tipo === "radio") {
+        let radio = document.getElementById(valor.index);
+        radio.checked = true
+      } else if (valor.tipo === "checkbox") {
+          valor.valores.map((valor) => {
+          let check = document.getElementById(valor.id);
+          check.checked = true
+        });
+      } else if (valor.tipo === "select") {
+        document.getElementById(valor.id).selectedIndex = valor.index;
+      }
+    });
+  }
+
+  componentDidMount() {
+      this.atualizaDomComponentes()
+  }
+
+  atualizaValorCampoInput = (campo, valor) => {
+
+    let novoCampo = campo;
+
+    novoCampo["valor"] = valor;
+    this.setState( { novoCampo })
+
+    //console.log({ ...this.state, campo })
+
+  }
+
+  atualizaValorCheckbox = (campo, filho) => {
+    
+    let novoCampo = campo;
+    let selecionados = []
+    campo.options.map((valor)=>{
+          let check = document.getElementById(valor.id);
+          if (check.checked == true) {
+             selecionados.push({id:valor.id, valor:valor.valor})
+          }
+    });
+    novoCampo["valores"] = selecionados;
+    this.setState({novoCampo})
+    console.log(novoCampo)
+  }
+
+  atualizaValorCampoRadio = (campo,filho) => {
+    let novoCampo = campo;
+
+    let index = document.getElementById(filho.id).value;
+    let valor = filho.valor;
+
+    novoCampo["index"] = index;
+    novoCampo["valor"] = valor;
+
+    this.setState({novoCampo})
+    console.log(novoCampo)
+  }
+
+  atualizaValorCampoSelect = (campo) => {
+
+    let novoCampo = campo;
+
+    let x = document.getElementById(novoCampo.id).selectedIndex;
+    let y = document.getElementById(novoCampo.id).options;
+    //alert("Index: " + y[x].index + " is " + y[x].value);
+
+    novoCampo["index"] = y[x].index;
+    novoCampo["valor"] = y[x].value;
+    novoCampo["idDetail"] = y[x].id;
+
+    this.setState({novoCampo})
+    console.log(JSON.stringify(novoCampo))
+
+  }
+
+  processaDadosNoServidor = (nome) => {
+    
+
+    this.state.formulario.map((valor)=>{
+
+       if (valor.tipo === "evento") {
+           valor["nome"] = nome;
+       }
+
+    });
+    
+    const formulario = {
+      formulario: this.state.formulario
+    }
+
+    axios.post(`http://127.0.0.1:5000/main/enviar_formulario`, formulario)
+        .then(res => {
+          const formulario = res.data;
+          console.log(formulario)
+          this.setState(formulario);        
+    })
+  }
+
+
+  renderizaComponente() {
+    
+    const { formulario } = this.state;
+
+    if (formulario != undefined || formulario != null) {
+      let arComponentes = formulario.map((valor, index)=>{
+                    
+        if (valor.tipo === "text") {
+          return(<InputText key={index} 
+            atualizaValorCampoInput={this.atualizaValorCampoInput}
+            componente={valor} />);
+        } else if (valor.tipo === "select") {
+          return (<Select key={index}
+            atualizaValorCampoSelect={this.atualizaValorCampoSelect}
+            componente={valor}/>);
+        } else if (valor.tipo === "password") {
+          return(<InputText key={index} 
+            atualizaValorCampoInput={this.atualizaValorCampoInput}
+            componente={valor} />);
+        } else if (valor.tipo === "radio") {
+          return(<Radio key={index}
+            atualizaValorCampoRadio={this.atualizaValorCampoRadio}
+            componente={valor} />);
+        } else if (valor.tipo === "checkbox") {
+          return(<Checkbox key={index}
+            atualizaValorCheckbox={this.atualizaValorCheckbox}
+            componente={valor} />);
+        } else if (valor.tipo === "button") {
+          return (<Button key={index} 
+            componente={valor}
+            processaDadosNoServidor={this.processaDadosNoServidor} />)
+        }
+        
+      })
+  
+      return(arComponentes);
+    } else {
+      return (<h1>NENHUM FOMULÁRIO</h1>)
+    }
+    
+  }
+
+  render() {
+
+    const { alertas } = this.state;
+
+      return(
+        <div className="card card-w-title">
+            <h1><b>FORMULARIO TESTE</b></h1>
+            <div className="row">
+                {alertas.map((valor, index)=>{
+                  return(
+                    <div key={index} className="alert alert-danger alert-fixed col-sm-12" role="alert" id="#myModal">
+                        {valor} 
+                    </div>
+                  );
+                })}
+                {this.renderizaComponente()}
+              </div>
+           <h1>{this.state.texto}</h1>
+          
+          <button className="btn btn-success" onClick={() => {
+            console.log(this.state)
+          }}>
+            VER FORMULARIO
+          </button>
+
+          <br />
+
+          <button className="btn btn-success" onClick={() => {
+            this.validaAntesDeSalvar();
+          }}>
+            VALIDAR ANTES DE SALVAR
+          </button>
+
+          <button className="btn btn-success" onClick={() => {
+            this.resetaFormulario();
+          }}>
+            RESETA FORMULARIO
+          </button>
+
+          <button className="btn btn-success" onClick={() => {
+            //this.setState(JSON.parse('{"formulario":[{"id":"01","tipo":"text","valor":"","placeholder":"","label":"Digite seu nome"},{"id":"02","tipo":"text","valor":"","placeholder":"","label":"Digite seu telefone"}]}'))
+            
+            axios.get(`http://127.0.0.1:5000/main/obter_formulario`)
+                .then(res => {
+                const formulario = res.data;
+
+                console.log(formulario)
+
+                this.setState(formulario);
+            })
+          
+          }}>
+            CONSTRUIR
+          </button>
+
+          <button className="btn btn-success" onClick={() => {
+            //this.setState(JSON.parse('{"formulario":[{"id":"01","tipo":"text","valor":"","placeholder":"","label":"Digite seu nome"},{"id":"02","tipo":"text","valor":"","placeholder":"","label":"Digite seu telefone"}]}'))
+            
+            //const { formulario } = this.state;            
+          
+          }}>
+            ENVIAR PARA O SERVIDOR
+          </button>
+
+
+
+        </div>
+      )
+  }
+}
+
+export default Formulario;
