@@ -22,47 +22,56 @@ class Formulario extends React.Component {
     this.state = {
 
       alertas:[],
-      formulario : [
-        {tipo:"text", type:"str", id:1, valor:"", placeholder:"Aqui voce vai digitar seu nome", label: "Digite seu nome",
-        func: eval("(valor)=> {if (valor.trim().length == 0) {return false;}return true;}"),
-        msgErro:"Campo nome nao pode ser vazio"},
- 
-        {tipo:"text", type:"str", id:2, valor:"kalho doido", placeholder:"", label: "Digite seu email",
-        func: (valor)=> {
- 
-           if (valor.trim().length == 0) {
-             return false;
-           }
- 
-         return true;
- 
-        }, msgErro:"Campo email nao pode ser vazio"},
-        {tipo:"password",type:"str", id:3, valor:"", placeholder:"", label: "Digite sua senha"},
-        {tipo:"select",id:4, label:"Selecione alguma coisa", index:"2", idDetail:"opt3", valor:"03", 
-                       options:[
-                               {valor:"01", id:"opt1"},
-                               {valor:"02", id:"opt2"}, 
-                               {valor:"03", id:"opt3"}]
-        },
-        {tipo:"text",type:"str", id:5, valor:"", placeholder:"", label: "Digite seu telefone"},
-        {tipo:"text",type:"str", id:6, valor:"", placeholder:"", label: "Digite seu sobre nome"},
-        
-        {tipo:"radio", id:7, valor:"", index:"rd3", idDetail:"rd3", label: "Selecione RADIO", 
-                       options:[
-                               {valor:"abacaxi", id:"rd1"},
-                               {valor:"abobora", id:"rd2"}, 
-                               {valor:"cebola", id:"rd3"}]
-       },
-       {tipo:"checkbox", id:8, valores:[{valor:"morango", id:"ch1"},{valor:"abacaxi", id:"ch3"}],label: "Selecione Checkbox", 
-                       options:[
-                               {valor:"morango", id:"ch1"},
-                               {valor:"banana", id:"ch2"}, 
-                               {valor:"abacaxi", id:"ch3"}]
-       },
-       {tipo:"button", id:9, evento:"eventoSoma", label: "Digite sua senha"},
-       
-     ]
+      formulario : {
+
+            id_formulario:"1234212334",
+            evento_atual:"",
+
+            componentes: [
+                          {tipo:"text", type:"str", id:1, valor:"", placeholder:"Aqui voce vai digitar seu nome", label: "Digite seu nome",
+                          func: eval("(valor)=> {if (valor.trim().length == 0) {return false;}return true;}"),
+                          msgErro:"Campo nome nao pode ser vazio"},
+                  
+                          {tipo:"text", type:"str", id:2, valor:"kalho doido", placeholder:"", label: "Digite seu email",
+                          func: (valor)=> {
+                  
+                            if (valor.trim().length == 0) {
+                              return false;
+                            }
+                  
+                          return true;
+                  
+                          }, msgErro:"Campo email nao pode ser vazio"},
+                          {tipo:"password",type:"str", id:3, valor:"", placeholder:"", label: "Digite sua senha"},
+                          {tipo:"select",id:4, label:"Selecione alguma coisa", index:"2", idDetail:"opt3", valor:"03", 
+                                        options:[
+                                                {valor:"01", id:"opt1"},
+                                                {valor:"02", id:"opt2"}, 
+                                                {valor:"03", id:"opt3"}]
+                          },
+                          {tipo:"text",type:"str", id:5, valor:"", placeholder:"", label: "Digite seu telefone"},
+                          {tipo:"text",type:"str", id:6, valor:"", placeholder:"", label: "Digite seu sobre nome"},
+                          
+                          {tipo:"radio", id:7, valor:"", index:"rd3", idDetail:"rd3", label: "Selecione RADIO", 
+                                        options:[
+                                                {valor:"abacaxi", id:"rd1"},
+                                                {valor:"abobora", id:"rd2"}, 
+                                                {valor:"cebola", id:"rd3"}]
+                        },
+                        {tipo:"checkbox", id:8, valores:[{valor:"morango", id:"ch1"},{valor:"abacaxi", id:"ch3"}],label: "Selecione Checkbox", 
+                                        options:[
+                                                {valor:"morango", id:"ch1"},
+                                                {valor:"banana", id:"ch2"}, 
+                                                {valor:"abacaxi", id:"ch3"}]
+                        },
+                        {tipo:"button", id:9, evento:"eventoSoma", label: "Digite sua senha"}
+            ]
+
+      }       
    }
+
+
+   console.log(this.state.formulario.id_formulario)
 
   }
 
@@ -98,9 +107,9 @@ class Formulario extends React.Component {
 
   resetaFormulario() {
     
-    console.log("resetaFormulario")
+    const { componentes } = this.state.formulario;
 
-    this.state.formulario.map((valor)=>{
+    componentes.map((valor) => {
       
       if (valor.tipo === "text" || valor.tipo === "password") {
           let valorNovo = valor;
@@ -160,10 +169,10 @@ class Formulario extends React.Component {
 
   renderizaComponente() {
     
-    const { formulario } = this.state;
+    const { componentes } = this.state.formulario;
 
-    if (formulario != undefined || formulario != null) {
-      let arComponentes = formulario.map((valor, index)=>{
+    if (componentes != undefined || componentes != null) {
+      let arComponentes = componentes.map((valor, index)=>{
                     
         if (valor.tipo === "text") {
           return(<InputText key={index} 
@@ -206,7 +215,7 @@ class Formulario extends React.Component {
 
       return(
         <div className="card card-w-title">
-            <h1><b>FORMULARIO TESTE</b></h1>
+            <h1><b>FORMULARIO TESTE - {this.state.formulario.id_formulario}</b></h1>
             <div className="row">
                 {alertas.map((valor, index)=>{
                   return(

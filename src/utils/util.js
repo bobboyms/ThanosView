@@ -61,7 +61,10 @@ export class FormUpdate {
     }
 
     atualizaDomComponentes() {
-        this.this_.state.formulario.map((valor)=>{
+
+        const { componentes } = this.this_.state.formulario;
+
+        componentes.map((valor)=>{
     
           if (valor.tipo === "radio") {
             let radio = document.getElementById(valor.index);

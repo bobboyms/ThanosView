@@ -1,14 +1,8 @@
 import axios from 'axios';
 
 const processaDadosNoServidor = (this_, nome) => {
-    
-    this_.state.formulario.map((valor)=>{
 
-       if (valor.tipo === "evento") {
-           valor["nome"] = nome;
-       }
-
-    });
+    this_.state.formulario.evento_atual = nome;
     
     const formulario = {
       formulario: this_.state.formulario
