@@ -10,12 +10,17 @@ import Radio from '../UIcomponents/radio'
 import InputText from '../UIcomponents/inputText'
 import Button from '../UIcomponents/button'
 import { FormUpdate } from "../utils/util";
+import { CarService } from "../service/CarService";
+import { DataTable } from 'primereact/datatable';
+import { Column } from 'primereact/column'
 
 class Formulario extends React.Component {
 
   constructor(props) {
     
     super(props)
+
+    this.carservice = new CarService()
 
     this.formUpdate = new FormUpdate(this)
 
@@ -25,6 +30,7 @@ class Formulario extends React.Component {
       formulario : {
 
             id_formulario:"1234212334",
+            
             evento_atual:"",
 
             componentes: [
@@ -64,14 +70,16 @@ class Formulario extends React.Component {
                                                 {valor:"banana", id:"ch2"}, 
                                                 {valor:"abacaxi", id:"ch3"}]
                         },
-                        {tipo:"button", id:9, evento:"eventoSoma", label: "Digite sua senha"}
+                        
+                        
+                        {tipo:"dataTable", id:9, label: "Digite sua senha"},
+
+                        {tipo:"button", id:10, evento:"eventoSoma", label: "Digite sua senha"}
             ]
 
       }       
    }
 
-
-   console.log(this.state.formulario.id_formulario)
 
   }
 
@@ -145,6 +153,8 @@ class Formulario extends React.Component {
 
   componentDidMount() {
       this.formUpdate.atualizaDomComponentes();
+      this.carservice.getCarsLarge().then(data => this.setState({cars: data}));
+
   }
 
   atualizaValorCampoInput = (campo, valor) => {
@@ -161,6 +171,20 @@ class Formulario extends React.Component {
 
   atualizaValorCampoSelect = (campo) => {
       this.formUpdate.atualizaValorCampoSelect(campo)
+  }
+
+  onCarSelect = (e) => {
+    this.newCar = false;
+    this.setState({
+        displayDialog:true,
+        car: Object.assign({}, e.data)
+    });
+
+    console.log(e.data)
+  }
+
+  selectionChange = (dado) => {
+    console.log(dado)
   }
 
   processaDadosNoServidor = (nome) => {
@@ -198,6 +222,11 @@ class Formulario extends React.Component {
           return (<Button key={index} 
             componente={valor}
             processaDadosNoServidor={this.processaDadosNoServidor} />)
+        } else if (valor.tipo === "dataTable") {
+          return(
+            <TableData key={index} cars={this.state.cars}
+            selectionChange={this.selectionChange}/>
+          );
         }
         
       })
@@ -278,6 +307,22 @@ class Formulario extends React.Component {
         </div>
       )
   }
+}
+
+const TableData = ({ cars, selectionChange }) => {
+    return(
+      <div className="form-group col-sm-12">
+        <DataTable value={cars} paginator={true} rows={10} selectionMode="single" 
+          onSelectionChange={(e) => {
+            selectionChange(e.data)
+          }}>
+                <Column field="vin" header="Vin" filter={true} />
+                <Column field="year" header="Year" filter={true} />
+                <Column field="brand" header="Brand" filter={true} />
+                <Column field="color" header="Color" filter={true} />
+            </DataTable>
+      </div>
+    )
 }
 
 export default Formulario;
