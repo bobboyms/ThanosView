@@ -1,6 +1,6 @@
 import React from "react";
 
-const InputText = ({componente, atualizaValorCampoInput}) => {
+const NativeInputText = ({componente, atualizaValorCampoInput}) => {
     return(
       <div className="form-group col-sm-4">
         <label >{componente.label}</label>

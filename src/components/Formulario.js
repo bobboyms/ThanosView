@@ -7,13 +7,14 @@ import processaDadosNoServidor from '../service/FormServices'
 import Select from '../UIcomponents/select'
 import Checkbox from '../UIcomponents/checkbox'
 import Radio from '../UIcomponents/radio'
-import InputText from '../UIcomponents/inputText'
+import NativeInputText from '../UIcomponents/inputText'
 import Button from '../UIcomponents/button'
 import { FormUpdate } from "../utils/util";
 import { CarService } from "../service/CarService";
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column'
-
+import { InputText } from 'primereact/inputtext'
+ 
 class Formulario extends React.Component {
 
   constructor(props) {
@@ -25,6 +26,12 @@ class Formulario extends React.Component {
     this.formUpdate = new FormUpdate(this)
 
     this.state = {
+
+      items: [],
+      loading: true,
+      first: 0,
+      rows: 10,
+      totalRecords: 0,
 
       alertas:[],
       formulario : {
@@ -72,7 +79,9 @@ class Formulario extends React.Component {
                         },
                         
                         
-                        {tipo:"dataTable", id:9, label: "Digite sua senha"},
+                        {tipo:"dataTable", id:9, label: "Digite sua senha",
+                        
+                        },
 
                         {tipo:"button", id:10, evento:"eventoSoma", label: "Digite sua senha"}
             ]
@@ -151,11 +160,43 @@ class Formulario extends React.Component {
     this.setState({alertas})
   }
 
-  componentDidMount() {
-      this.formUpdate.atualizaDomComponentes();
-      this.carservice.getCarsLarge().then(data => this.setState({cars: data}));
+  componentDidMount = () => {
+      //this.carservice.getCarsLarge().then(data => this.setState({cars: data}));
+
+      setTimeout(() => {
+        this.carservice.getCarsLarge().then(data => {
+            this.datasource = data;
+            this.setState({
+                totalRecords: data.length,
+                items: this.datasource.slice(0, this.state.rows),
+                loading: false
+            });
+        });
+    }, 1000);
+
+    this.formUpdate.atualizaDomComponentes();
 
   }
+
+  onPage = (event) => {
+      this.setState({
+          loading: true
+      });
+
+      //imitate delay of a backend call
+      setTimeout(() => {
+          const startIndex = event.first;
+          const endIndex = event.first + this.state.rows;
+
+          this.setState({
+              first: startIndex,
+              items: this.datasource.slice(startIndex, endIndex),
+              loading: false
+          });
+      }, 250);
+  }
+
+  
 
   atualizaValorCampoInput = (campo, valor) => {
       this.formUpdate.atualizaValorCampoInput(campo,valor);
@@ -173,23 +214,55 @@ class Formulario extends React.Component {
       this.formUpdate.atualizaValorCampoSelect(campo)
   }
 
-  onCarSelect = (e) => {
-    this.newCar = false;
-    this.setState({
-        displayDialog:true,
-        car: Object.assign({}, e.data)
-    });
-
-    console.log(e.data)
-  }
-
   selectionChange = (dado) => {
-    console.log(dado)
+      console.log(dado)
   }
 
   processaDadosNoServidor = (nome) => {
       processaDadosNoServidor(this,nome);
   }
+
+  // - - - -- - - - - -- - - - -- - - - -- - -- -
+
+  // onLazyLoad = (event) => {
+  //   console.log("On Lazy load event", event);
+  //       let self = this;
+  //       this.setState({ loading: true });
+  //       this.carservice.getCarsLazy(event)
+  //           .then(function (resItems) {
+  //               console.log("Headers", resItems.headers);
+  //               //get total record count from response header
+  //               var totalRecords = resItems.headers['x-result-count'];
+  //               //load items into local array
+  //               self.setState({ totalRecords: Number(totalRecords), loading: false, items: resItems.data });
+  //           }).catch(function (error) {
+  //               console.log(error);
+  //           });
+
+  // }
+
+  onModelFilterChange = (event) => {
+      console.log(event.target.value);
+      console.log(event.target.name);
+
+        // if (this.state.filterTimerId) {
+        //     clearTimeout(this.state.filterTimerId);
+        // }
+        // let context = this;
+        // let filterValue = event.target.value;
+        // var filterTimerId = setTimeout(() => {
+        //     //following line sets defined filter and triggers onLazyLoad function
+        //     context.dt.filter(filterValue, 'model', 'contains');
+        //     context.setState({ filterTimerId: null });
+        // }, 1000);
+        // this.setState({ filterTimerId: filterTimerId });
+  }
+
+  // colorColumnTemplate(rowData, column) {
+  //     //car color column template goes here
+  // }
+
+  // - - - - -- - - -- - - - -- -- - - - -- - - -
 
   renderizaComponente() {
     
@@ -199,7 +272,7 @@ class Formulario extends React.Component {
       let arComponentes = componentes.map((valor, index)=>{
                     
         if (valor.tipo === "text") {
-          return(<InputText key={index} 
+          return(<NativeInputText key={index} 
             atualizaValorCampoInput={this.atualizaValorCampoInput}
             componente={valor} />);
         } else if (valor.tipo === "select") {
@@ -207,7 +280,7 @@ class Formulario extends React.Component {
             atualizaValorCampoSelect={this.atualizaValorCampoSelect}
             componente={valor}/>);
         } else if (valor.tipo === "password") {
-          return(<InputText key={index} 
+          return(<NativeInputText key={index} 
             atualizaValorCampoInput={this.atualizaValorCampoInput}
             componente={valor} />);
         } else if (valor.tipo === "radio") {
@@ -224,8 +297,16 @@ class Formulario extends React.Component {
             processaDadosNoServidor={this.processaDadosNoServidor} />)
         } else if (valor.tipo === "dataTable") {
           return(
-            <TableData key={index} cars={this.state.cars}
-            selectionChange={this.selectionChange}/>
+            <TableData key={index}
+              items={this.state.items}
+              rows={this.state.rows}
+              totalRecords={this.state.totalRecords}
+              first={this.state.first}
+              loading={this.state.loading} 
+
+              onPage={this.onPage}
+              onModelFilterChange={this.onModelFilterChange} 
+            />
           );
         }
         
@@ -309,20 +390,40 @@ class Formulario extends React.Component {
   }
 }
 
-const TableData = ({ cars, selectionChange }) => {
-    return(
-      <div className="form-group col-sm-12">
-        <DataTable value={cars} paginator={true} rows={10} selectionMode="single" 
-          onSelectionChange={(e) => {
-            selectionChange(e.data)
-          }}>
-                <Column field="vin" header="Vin" filter={true} />
-                <Column field="year" header="Year" filter={true} />
-                <Column field="brand" header="Brand" filter={true} />
-                <Column field="color" header="Color" filter={true} />
-            </DataTable>
-      </div>
-    )
+const TableData = ({ items,rows, totalRecords, first, onPage, loading, onModelFilterChange }) => {
+  
+                  let modelFilter = <InputText name="modelo" chico="teste" style={{ width: '100%' }} className="ui-column-filter"
+                                               onChange={onModelFilterChange} />
+
+                  // let tableHeader = <div className="ui-helper-clearfix" style={{ width: '100%' }}>
+                  //                              <label style={{ float: 'left', fontWeight: 'bold' }}>PrimeReact lazy table with filtering and sorting</label>
+                                             
+                  //                          </div>;
+
+
+                  // let datatable = <DataTable ref={(el) => dt = el} value={items}
+                  //                         lazy={true} onLazyLoad={onLazyLoad}
+                  //                         paginator={true} rows={5} rowsPerPageOptions={[5, 10, 20]} totalRecords={totalRecords}
+                  //                         header={tableHeader}>
+                  //                         <Column field="model" header="Model" sortable={true}
+                  //                             filter={true} filterElement={modelFilter} filterMatchMode="contains" />
+                  //                         <Column field="year" header="Year" sortable={true} />
+                  //                         <Column field="brand" header="Brand" sortable={true} />
+                  //                         <Column header="Color" />
+                  //                 </DataTable>;
+
+                  let table = 
+                                <DataTable value={items} paginator={true} rows={rows} totalRecords={totalRecords}
+                                      lazy={true} first={first} onPage={onPage} loading={loading}>
+                                      <Column field="vin" header="Vin" />
+                                      <Column field="year" header="Year" />
+                                      <Column field="brand" header="Brand" 
+                                              filter={true} filterElement={modelFilter} filterMatchMode="contains" />
+                                      <Column field="color" header="Color" />
+                                  </DataTable>    
+  return(table)
+
+    
 }
 
 export default Formulario;
