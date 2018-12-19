@@ -11,4 +11,4 @@ const NativeInputText = ({componente, atualizaValorCampoInput}) => {
     )
 }
 
-export default InputText;
+export default NativeInputText;

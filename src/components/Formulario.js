@@ -2,8 +2,6 @@ import React from "react";
 import { BrowserRouter as Router, Route } from "react-router-dom";
 import axios from 'axios';
 
-import processaDadosNoServidor from '../service/FormServices'
-
 import Select from '../UIcomponents/select'
 import Checkbox from '../UIcomponents/checkbox'
 import Radio from '../UIcomponents/radio'
@@ -13,25 +11,23 @@ import { FormUpdate } from "../utils/util";
 import { CarService } from "../service/CarService";
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column'
-import { InputText } from 'primereact/inputtext'
- 
+import { InputText } from 'primereact/inputtext';
+import { FormService } from "../service/FormServices";
+
+
 class Formulario extends React.Component {
 
   constructor(props) {
     
     super(props)
 
+    this.formService = new FormService();
+
     this.carservice = new CarService()
 
     this.formUpdate = new FormUpdate(this)
 
     this.state = {
-
-      items: [],
-      loading: true,
-      first: 0,
-      rows: 10,
-      totalRecords: 0,
 
       alertas:[],
       formulario : {
@@ -79,8 +75,12 @@ class Formulario extends React.Component {
                         },
                         
                         
-                        {tipo:"dataTable", id:9, label: "Digite sua senha",
-                        
+                        {tipo:"dataTable", id:9,
+                              items: [], 
+                              loading: true,
+                              first: 0,
+                              rows: 10,
+                              totalRecords: 0,
                         },
 
                         {tipo:"button", id:10, evento:"eventoSoma", label: "Digite sua senha"}
@@ -162,38 +162,56 @@ class Formulario extends React.Component {
 
   componentDidMount = () => {
       //this.carservice.getCarsLarge().then(data => this.setState({cars: data}));
-
-      setTimeout(() => {
-        this.carservice.getCarsLarge().then(data => {
-            this.datasource = data;
-            this.setState({
-                totalRecords: data.length,
-                items: this.datasource.slice(0, this.state.rows),
-                loading: false
-            });
-        });
-    }, 1000);
-
     this.formUpdate.atualizaDomComponentes();
+
+    const { componentes } = this.state.formulario;
+
+    componentes.map((componente)=> {
+
+      if (componente.tipo == "dataTable") {
+        this.iniciaValoresDataTable(componente)
+      }
+
+    });
 
   }
 
-  onPage = (event) => {
+  iniciaValoresDataTable = (componente) => {
+    
+    console.log("aki")
+/** *
+    this.formService.procesaDadosDataTable(componente).then(data => {
+        
+          componente.datasource = data;
+
+          componente["totalRecords"] = data.length,
+          componente["items"] = componente.datasource.slice(0, componente.rows),
+          componente["loading"] = false
+
+          this.setState({componente});
+      });
+      **/
+
+  }
+
+  onPage = (event, componente) => {
+
+      componente["loading"] = true;  
       this.setState({
-          loading: true
+        componente
       });
 
-      //imitate delay of a backend call
-      setTimeout(() => {
-          const startIndex = event.first;
-          const endIndex = event.first + this.state.rows;
+      // delay of a backend call
+      const startIndex = event.first;
+      const endIndex = event.first + componente.rows;
 
-          this.setState({
-              first: startIndex,
-              items: this.datasource.slice(startIndex, endIndex),
-              loading: false
-          });
-      }, 250);
+      componente["first"] = startIndex,
+      componente["items"] = componente.datasource.slice(startIndex, endIndex),
+      componente["loading"] = false
+
+      this.setState({
+          componente
+      });
   }
 
   
@@ -219,7 +237,8 @@ class Formulario extends React.Component {
   }
 
   processaDadosNoServidor = (nome) => {
-      processaDadosNoServidor(this,nome);
+
+      this.formService.processaDadosNoServidor(this,nome);
   }
 
   // - - - -- - - - - -- - - - -- - - - -- - -- -
@@ -298,12 +317,7 @@ class Formulario extends React.Component {
         } else if (valor.tipo === "dataTable") {
           return(
             <TableData key={index}
-              items={this.state.items}
-              rows={this.state.rows}
-              totalRecords={this.state.totalRecords}
-              first={this.state.first}
-              loading={this.state.loading} 
-
+              componente={valor}
               onPage={this.onPage}
               onModelFilterChange={this.onModelFilterChange} 
             />
@@ -313,6 +327,7 @@ class Formulario extends React.Component {
       })
   
       return(arComponentes);
+
     } else {
       return (<h1>NENHUM FOMULÁRIO</h1>)
     }
@@ -390,37 +405,25 @@ class Formulario extends React.Component {
   }
 }
 
-const TableData = ({ items,rows, totalRecords, first, onPage, loading, onModelFilterChange }) => {
-  
-                  let modelFilter = <InputText name="modelo" chico="teste" style={{ width: '100%' }} className="ui-column-filter"
+
+const TableData = ({componente, iniciaValores, onPage, onModelFilterChange }) => {
+
+                  let modelFilter = <InputText name="modelo" style={{ width: '100%' }} className="ui-column-filter"
                                                onChange={onModelFilterChange} />
-
-                  // let tableHeader = <div className="ui-helper-clearfix" style={{ width: '100%' }}>
-                  //                              <label style={{ float: 'left', fontWeight: 'bold' }}>PrimeReact lazy table with filtering and sorting</label>
-                                             
-                  //                          </div>;
-
-
-                  // let datatable = <DataTable ref={(el) => dt = el} value={items}
-                  //                         lazy={true} onLazyLoad={onLazyLoad}
-                  //                         paginator={true} rows={5} rowsPerPageOptions={[5, 10, 20]} totalRecords={totalRecords}
-                  //                         header={tableHeader}>
-                  //                         <Column field="model" header="Model" sortable={true}
-                  //                             filter={true} filterElement={modelFilter} filterMatchMode="contains" />
-                  //                         <Column field="year" header="Year" sortable={true} />
-                  //                         <Column field="brand" header="Brand" sortable={true} />
-                  //                         <Column header="Color" />
-                  //                 </DataTable>;
-
                   let table = 
-                                <DataTable value={items} paginator={true} rows={rows} totalRecords={totalRecords}
-                                      lazy={true} first={first} onPage={onPage} loading={loading}>
-                                      <Column field="vin" header="Vin" />
-                                      <Column field="year" header="Year" />
-                                      <Column field="brand" header="Brand" 
-                                              filter={true} filterElement={modelFilter} filterMatchMode="contains" />
-                                      <Column field="color" header="Color" />
-                                  </DataTable>    
+                              <div className="form-group col-sm-12">
+                                  <DataTable value={componente.items} paginator={true} rows={componente.rows} totalRecords={componente.totalRecords}
+                                        lazy={true} first={componente.first} onPage={(e) =>{
+                                          onPage(e, componente);
+                                        }} loading={componente.loading}>
+                                        <Column field="id" header="id" />
+                                        <Column field="vin" header="Vin" />
+                                        <Column field="year" header="Year" />
+                                        <Column field="brand" header="Brand" 
+                                                filter={true} filterElement={modelFilter} filterMatchMode="contains" />
+                                        <Column field="color" header="Color" />
+                                    </DataTable>
+                              </div>  
   return(table)
 
     
