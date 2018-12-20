@@ -203,14 +203,24 @@ class Formulario extends React.Component {
 
       // delay of a backend call
       const startIndex = event.first;
-      const endIndex = event.first + componente.rows;
+      //const endIndex = event.first + componente.rows;
+      
+      //console.log(startIndex)
+      //console.log(endIndex)
 
       componente["first"] = startIndex,
-      componente["items"] = componente.datasource.slice(startIndex, endIndex),
-      componente["loading"] = false
+      //componente["items"] = componente.datasource.slice(startIndex, endIndex),
+      //componente["loading"] = false
 
       this.setState({
           componente
+      });
+
+      this.processaDadosNoServidor("eventoSubtrai")
+
+      componente["loading"] = false;  
+      this.setState({
+        componente
       });
   }
 
